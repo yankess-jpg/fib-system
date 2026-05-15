@@ -24,38 +24,15 @@ class Auth extends BaseController
             $badge = $this->request->getPost('badge');
             $password = $this->request->getPost('password');
 
-            echo "DEBUG: Badge = " . $badge . "<br>";
-            echo "DEBUG: Password = " . $password . "<br>";
+            // Sprawdzenie czy agent istnieje i hasło się zgadza
+            $agent = $this->fibAgentModel->checkCredentials($badge, $password);
 
-            // Sprawdzenie czy agent istnieje
-            $agent = $this->fibAgentModel
-                ->where('agent_badge', $badge)
-                ->first();
-
-            echo "DEBUG: Agent Found = " . ($agent ? 'YES' : 'NO') . "<br>";
-            
-            if ($agent) {
-                echo "DEBUG: Agent Data: " . json_encode($agent) . "<br>";
-                echo "DEBUG: Password Hash = " . $agent['password_hash'] . "<br>";
-                
-                $verify = password_verify($password, $agent['password_hash']);
-                echo "DEBUG: Password Verify = " . ($verify ? 'TRUE' : 'FALSE') . "<br>";
-            }
-
-            // Jeśli agent nie znaleziony
+            // Jeśli agent nie znaleziony lub hasło błędne
             if (!$agent) {
-                echo "DEBUG: Redirecting - Agent not found<br>";
-                return redirect()->back()->withInput()->with('error', 'Agent nie znaleziony: ' . $badge);
-            }
-
-            // Sprawdzenie hasła
-            if (!password_verify($password, $agent['password_hash'])) {
-                echo "DEBUG: Redirecting - Password mismatch<br>";
-                return redirect()->back()->withInput()->with('error', 'Błędne hasło');
+                return redirect()->back()->withInput()->with('error', 'Nieprawidłowy numer identyfikacyjny lub hasło');
             }
 
             // Ustawienie sesji
-            echo "DEBUG: Setting session...<br>";
             session()->set([
                 'agent_id' => $agent['agent_id'],
                 'citizen_id' => $agent['citizen_id'],
@@ -67,8 +44,7 @@ class Auth extends BaseController
                 'is_logged_in' => true,
             ]);
 
-            echo "DEBUG: Session set. is_logged_in = " . session()->get('is_logged_in') . "<br>";
-            echo "DEBUG: Redirecting to /dashboard<br>";
+            log_message('info', 'Agent logged in: ' . $agent['agent_badge']);
 
             // Redirect na dashboard
             return redirect()->to('/dashboard')->with('success', 'Zalogowano pomyślnie');
@@ -79,7 +55,13 @@ class Auth extends BaseController
 
     public function logout()
     {
+        $agent_badge = session()->get('agent_badge');
         session()->destroy();
+        
+        if ($agent_badge) {
+            log_message('info', 'Agent logged out: ' . $agent_badge);
+        }
+        
         return redirect()->to('/')->with('success', 'Wylogowano pomyślnie');
     }
 }

@@ -12,6 +12,8 @@ use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
+use App\Filters\AuthFilter;
+use App\Filters\AdminAuthFilter;
 
 class Filters extends BaseFilters
 {
@@ -34,8 +36,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        'authFilter' => \App\Filters\AuthFilter::class,
-        'adminAuthFilter' => \App\Filters\AdminAuthFilter::class,
+        'authFilter'    => AuthFilter::class,
+        'adminAuthFilter' => AdminAuthFilter::class,
     ];
 
     /**
@@ -108,5 +110,19 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'authFilter' => [
+            'before' => [
+                'dashboard',
+                'dashboard/*',
+            ],
+            'after' => [],
+        ],
+        'adminAuthFilter' => [
+            'before' => [
+                'admin/*',
+            ],
+            'after' => [],
+        ],
+    ];
 }

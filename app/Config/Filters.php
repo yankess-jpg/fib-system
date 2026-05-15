@@ -111,7 +111,7 @@ class Filters extends BaseFilters
      * @var array<string, array<string, list<string>>>
      */
     public array $filters = [
-        'authFilter' => [
+       'authFilter' => [
             'before' => [
                 'dashboard',
                 'dashboard/*',
@@ -125,4 +125,4 @@ class Filters extends BaseFilters
             'after' => [],
         ],
     ];
-}
+}           
